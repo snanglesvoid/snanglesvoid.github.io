@@ -28,12 +28,12 @@ const meshMaterial = new THREE.MeshPhongMaterial({color: 0x156289,emissive:0x072
 group.add(new THREE.LineSegments(bufferGeo, lineMaterial))
 group.add(new THREE.Mesh(bufferGeo, meshMaterial))
 
-const material = new THREE.MeshBasicMaterial({ color: 0xffff00 })
-
 let rotationX = 0.000
 let rotationY = 0.000
 
 guis.CylinderGeometry(group)
+guis.LightsOptions(lights)
+guis.MaterialOptions(group)
 guis.CameraOptions(orbit, camera, data => {
     rotationX = data.dx
     rotationY = data.dy
@@ -44,7 +44,7 @@ scene.add(group)
 var prevFog = false;
 
 var render = function () {
-
+    
     requestAnimationFrame( render );
 
     if ( true ) {
