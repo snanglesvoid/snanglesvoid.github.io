@@ -104,14 +104,14 @@ var render = function () {
     
     requestAnimationFrame( render );
 
-    // group.children[1].rotateY(PI)
-    // group.children[1].rotateZ(PI)
-
     if ( true ) {
 
         group.rotation.x += rotationX;
         group.rotation.y += rotationY;
 
+        geo.rotateX(0.01)
+        geo.rotateY(0.007)
+        geo.rotateZ(0.12)
     }
 
     renderer.render( scene, camera );
