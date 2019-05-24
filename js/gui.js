@@ -169,5 +169,12 @@ const guis = {
         folder.add( data, 'extrusionFunction').onChange( generate );
         
         generate()
+
+        return function(d) {
+            Object.keys(d).forEach(k => {
+                data[k] = d[k]
+            })
+            generate()
+        } 
     }
 }

@@ -88,7 +88,7 @@ loader.load('./assets/fonts/helvetiker_regular.typeface.json', function(font) {
     }
     window.extrusionFunction = (x,y) => f(x,y)
     
-    guis.CylinderGeometry(group,
+    window.cylinderUpdate = guis.CylinderGeometry(group,
         0, 0, 1, 2, PI/2, 0, PI/2)
     guis.LightsOptions(lights)
     guis.MaterialOptions(group)
@@ -100,18 +100,28 @@ loader.load('./assets/fonts/helvetiker_regular.typeface.json', function(font) {
 
 scene.add(group)
 
+
+heartRotateX = PI/2
+heartRotateY = 0.0
+heartRotateZ = PI/2
 var render = function () {
     
     requestAnimationFrame( render );
 
     if ( true ) {
-
+        heartRotateX += 0.08
+        heartRotateY += 0.0
+        heartRotateZ += 0.0
         group.rotation.x += rotationX;
         group.rotation.y += rotationY;
 
-        geo.rotateX(0.01)
-        geo.rotateY(0.007)
-        geo.rotateZ(0.12)
+        if (window.cylinderUpdate) {
+            window.cylinderUpdate({
+                rotateX: heartRotateX,
+                rotateY: heartRotateY,
+                rotateZ: heartRotateZ,
+            })
+        }
     }
 
     renderer.render( scene, camera );
