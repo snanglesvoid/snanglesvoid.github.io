@@ -1,273 +1,254 @@
 function ExtrudedCylinderBufferGeometry(
-    radiusTop = 1,
-    radiusBottom = 1,
-    height = 1,
-    radialSegments = 8,
-    heightSegments = 1,
-    openEnded = false,
-    thetaStart = 0,
-    thetaLength = 2*Math.PI,
-    extrusion = 0.5,
-    extrusionFunction = x => Math.sin(2*Math.PI*x)
+  radiusTop = 1,
+  radiusBottom = 1,
+  height = 1,
+  radialSegments = 8,
+  heightSegments = 1,
+  openEnded = false,
+  thetaStart = 0,
+  thetaLength = 2 * Math.PI,
+  extrusion = 0.5,
+  extrusionFunction = x => Math.sin(2 * Math.PI * x)
 ) {
-    THREE.BufferGeometry.call(this)
+  THREE.BufferGeometry.call(this)
 
-    this.type = 'ExtrudedCylinderBufferGeometry'
+  this.type = 'ExtrudedCylinderBufferGeometry'
 
-    this.parameters = {
-        radiusTop: radiusTop,
-		radiusBottom: radiusBottom,
-		height: height,
-		radialSegments: radialSegments,
-		heightSegments: heightSegments,
-		openEnded: openEnded,
-		thetaStart: thetaStart,
-        thetaLength: thetaLength,
-        extrusion: extrusion
+  this.parameters = {
+    radiusTop: radiusTop,
+    radiusBottom: radiusBottom,
+    height: height,
+    radialSegments: radialSegments,
+    heightSegments: heightSegments,
+    openEnded: openEnded,
+    thetaStart: thetaStart,
+    thetaLength: thetaLength,
+    extrusion: extrusion,
+  }
+
+  let scope = this
+
+  let indices = []
+  let vertices = []
+  let normals = []
+  let uvs = []
+
+  let index = 0
+  let indexArray = []
+  let halfHeight = height / 2
+  let groupStart = 0
+
+  window.geo = this
+
+  generateTorso()
+
+  if (!openEnded) {
+    if (extrusionFunction(0, 0) * extrusion + radiusTop > 0) generateCap(true)
+    if (extrusionFunction(0, 1) * extrusion + radiusBottom > 0)
+      generateCap(false)
+  }
+
+  this.setIndex(indices)
+  this.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+  this.addAttribute('normal', new THREE.Float32BufferAttribute(normals, 3))
+  this.addAttribute('uv', new THREE.Float32BufferAttribute(), uvs, 2)
+
+  function generateTorso() {
+    var x, y
+    var normal = new THREE.Vector3()
+    var vertex = new THREE.Vector3()
+
+    var groupCount = 0
+
+    // this will be used to calculate the normal
+    var slope = (radiusBottom - radiusTop) / height
+
+    // generate vertices, normals and uvs
+
+    for (y = 0; y <= heightSegments; y++) {
+      var indexRow = []
+
+      var v = y / heightSegments
+
+      // calculate the radius of the current row
+
+      for (x = 0; x <= radialSegments; x++) {
+        let r = (2 * Math.PI * x) / radialSegments
+        let ex = extrusionFunction(r, v) * extrusion
+        var radius = v * (radiusBottom - radiusTop) + radiusTop + ex
+
+        var u = x / radialSegments
+
+        var theta = u * thetaLength + thetaStart
+
+        var sinTheta = Math.sin(theta)
+        var cosTheta = Math.cos(theta)
+
+        // vertex
+
+        vertex.x = radius * sinTheta
+        vertex.y = -v * height + halfHeight
+        vertex.z = radius * cosTheta
+        vertices.push(vertex.x, vertex.y, vertex.z)
+
+        // normal
+
+        normal.set(sinTheta, slope, cosTheta).normalize()
+        normals.push(normal.x, normal.y, normal.z)
+
+        // uv
+
+        uvs.push(u, 1 - v)
+
+        // save index of vertex in respective row
+
+        indexRow.push(index++)
+      }
+
+      // now save vertices of the row in our index array
+
+      indexArray.push(indexRow)
     }
 
-    let scope = this
+    // generate indices
 
-    let indices = []
-    let vertices = []
-    let normals = []
-    let uvs = []
+    for (x = 0; x < radialSegments; x++) {
+      for (y = 0; y < heightSegments; y++) {
+        // we use the index array to access the correct indices
 
-    let index = 0
-    let indexArray = []
-    let halfHeight = height/2
-    let groupStart = 0
+        var a = indexArray[y][x]
+        var b = indexArray[y + 1][x]
+        var c = indexArray[y + 1][x + 1]
+        var d = indexArray[y][x + 1]
 
-    window.geo = this
+        // faces
 
-    generateTorso()
+        indices.push(a, b, d)
+        indices.push(b, c, d)
 
-    if (!openEnded) {
-        if (extrusionFunction(0, 0) * extrusion + radiusTop > 0) generateCap(true)
-        if (extrusionFunction(0, 1) * extrusion + radiusBottom > 0) generateCap(false)
+        // update group counter
+
+        groupCount += 6
+      }
     }
 
-    this.setIndex(indices)
-    this.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
-    this.addAttribute('normal', new THREE.Float32BufferAttribute(normals, 3))
-    this.addAttribute('uv', new THREE.Float32BufferAttribute, uvs, 2)
+    // add a group to the geometry. this will ensure multi material support
 
-	function generateTorso() {
+    scope.addGroup(groupStart, groupCount, 0)
 
-		var x, y;
-		var normal = new THREE.Vector3();
-		var vertex = new THREE.Vector3();
+    // calculate new start value for groups
 
-		var groupCount = 0;
+    groupStart += groupCount
+  }
 
-		// this will be used to calculate the normal
-		var slope = ( radiusBottom - radiusTop ) / height;
+  function generateCap(top) {
+    var x, centerIndexStart, centerIndexEnd
 
-		// generate vertices, normals and uvs
+    var uv = new THREE.Vector2()
+    var vertex = new THREE.Vector3()
 
-		for ( y = 0; y <= heightSegments; y ++ ) {
+    var groupCount = 0
 
-			var indexRow = [];
+    var radius =
+      top === true
+        ? extrusionFunction(0, 0) * extrusion + radiusTop
+        : extrusionFunction(0, 1) * extrusion + radiusBottom
+    var v = top === true ? 0 : 1
+    var sign = top === true ? 1 : -1
 
-			var v = y / heightSegments;
+    // save the index of the first center vertex
+    centerIndexStart = index
 
-            // calculate the radius of the current row
-            
-            
-			for ( x = 0; x <= radialSegments; x ++ ) {
-                let r = 2* Math.PI * x / radialSegments
-                let ex = extrusionFunction(r, v) * extrusion
-                var radius = v * ( radiusBottom - radiusTop ) + radiusTop + ex;
+    // first we generate the center vertex data of the cap.
+    // because the geometry needs one set of uvs per face,
+    // we must generate a center vertex per face/segment
 
-				var u = x / radialSegments;
+    for (x = 1; x <= radialSegments; x++) {
+      // vertex
 
-				var theta = u * thetaLength + thetaStart;
+      vertices.push(0, halfHeight * sign, 0)
 
-				var sinTheta = Math.sin( theta );
-				var cosTheta = Math.cos( theta );
+      // normal
 
-				// vertex
+      normals.push(0, sign, 0)
 
-				vertex.x = radius * sinTheta;
-				vertex.y = - v * height + halfHeight;
-				vertex.z = radius * cosTheta;
-				vertices.push( vertex.x, vertex.y, vertex.z );
+      // uv
 
-				// normal
+      uvs.push(0.5, 0.5)
 
-				normal.set( sinTheta, slope, cosTheta ).normalize();
-				normals.push( normal.x, normal.y, normal.z );
+      // increase index
 
-				// uv
+      index++
+    }
 
-				uvs.push( u, 1 - v );
+    // save the index of the last center vertex
 
-				// save index of vertex in respective row
+    centerIndexEnd = index
 
-				indexRow.push( index ++ );
+    // now we generate the surrounding vertices, normals and uvs
 
-			}
+    for (x = 0; x <= radialSegments; x++) {
+      var u = x / radialSegments
+      var theta = u * thetaLength + thetaStart
 
-			// now save vertices of the row in our index array
+      var cosTheta = Math.cos(theta)
+      var sinTheta = Math.sin(theta)
 
-			indexArray.push( indexRow );
+      // vertex
+      let r = (2 * Math.PI * x) / radialSegments
+      let ex = extrusionFunction(r, v) * extrusion
+      radius = v * (radiusBottom - radiusTop) + radiusTop + ex
 
-		}
+      vertex.x = radius * sinTheta
+      vertex.y = halfHeight * sign
+      vertex.z = radius * cosTheta
+      vertices.push(vertex.x, vertex.y, vertex.z)
 
-		// generate indices
+      // normal
 
-		for ( x = 0; x < radialSegments; x ++ ) {
+      normals.push(0, sign, 0)
 
-			for ( y = 0; y < heightSegments; y ++ ) {
+      // uv
 
-				// we use the index array to access the correct indices
+      uv.x = cosTheta * 0.5 + 0.5
+      uv.y = sinTheta * 0.5 * sign + 0.5
+      uvs.push(uv.x, uv.y)
 
-				var a = indexArray[ y ][ x ];
-				var b = indexArray[ y + 1 ][ x ];
-				var c = indexArray[ y + 1 ][ x + 1 ];
-				var d = indexArray[ y ][ x + 1 ];
+      // increase index
 
-				// faces
+      index++
+    }
 
-				indices.push( a, b, d );
-				indices.push( b, c, d );
+    // generate indices
 
-				// update group counter
+    for (x = 0; x < radialSegments; x++) {
+      var c = centerIndexStart + x
+      var i = centerIndexEnd + x
 
-				groupCount += 6;
+      if (top === true) {
+        // face top
 
-			}
+        indices.push(i, i + 1, c)
+      } else {
+        // face bottom
 
-		}
+        indices.push(i + 1, i, c)
+      }
 
-		// add a group to the geometry. this will ensure multi material support
+      groupCount += 3
+    }
 
-		scope.addGroup( groupStart, groupCount, 0 );
+    // add a group to the geometry. this will ensure multi material support
 
-		// calculate new start value for groups
+    scope.addGroup(groupStart, groupCount, top === true ? 1 : 2)
 
-		groupStart += groupCount;
+    // calculate new start value for groups
 
-	}
-
-    
-    function generateCap( top ) {
-
-		var x, centerIndexStart, centerIndexEnd;
-
-		var uv = new THREE.Vector2();
-		var vertex = new THREE.Vector3();
-
-		var groupCount = 0;
-
-        var radius = ( top === true ) ? extrusionFunction(0, 0) * extrusion + radiusTop : extrusionFunction(0, 1) * extrusion + radiusBottom;
-        var v = (top === true) ? 0 : 1;
-		var sign = ( top === true ) ? 1 : - 1;
-
-		// save the index of the first center vertex
-		centerIndexStart = index;
-
-		// first we generate the center vertex data of the cap.
-		// because the geometry needs one set of uvs per face,
-		// we must generate a center vertex per face/segment
-
-		for ( x = 1; x <= radialSegments; x ++ ) {
-
-			// vertex
-
-			vertices.push( 0, halfHeight * sign, 0 );
-
-			// normal
-
-			normals.push( 0, sign, 0 );
-
-			// uv
-
-			uvs.push( 0.5, 0.5 );
-
-			// increase index
-
-			index ++;
-
-		}
-
-		// save the index of the last center vertex
-
-		centerIndexEnd = index;
-
-		// now we generate the surrounding vertices, normals and uvs
-
-		for ( x = 0; x <= radialSegments; x ++ ) {
-
-			var u = x / radialSegments;
-			var theta = u * thetaLength + thetaStart;
-
-			var cosTheta = Math.cos( theta );
-			var sinTheta = Math.sin( theta );
-
-            // vertex
-            let r = 2* Math.PI * x / radialSegments
-            let ex = extrusionFunction(r, v) * extrusion
-            radius = v * ( radiusBottom - radiusTop ) + radiusTop + ex;
-
-
-			vertex.x = radius * sinTheta;
-			vertex.y = halfHeight * sign;
-			vertex.z = radius * cosTheta;
-			vertices.push( vertex.x, vertex.y, vertex.z );
-
-			// normal
-
-			normals.push( 0, sign, 0 );
-
-			// uv
-
-			uv.x = ( cosTheta * 0.5 ) + 0.5;
-			uv.y = ( sinTheta * 0.5 * sign ) + 0.5;
-			uvs.push( uv.x, uv.y );
-
-			// increase index
-
-			index ++;
-
-		}
-
-		// generate indices
-
-		for ( x = 0; x < radialSegments; x ++ ) {
-
-			var c = centerIndexStart + x;
-			var i = centerIndexEnd + x;
-
-			if ( top === true ) {
-
-				// face top
-
-				indices.push( i, i + 1, c );
-
-			} else {
-
-				// face bottom
-
-				indices.push( i + 1, i, c );
-
-			}
-
-			groupCount += 3;
-
-		}
-
-		// add a group to the geometry. this will ensure multi material support
-
-		scope.addGroup( groupStart, groupCount, top === true ? 1 : 2 );
-
-		// calculate new start value for groups
-
-		groupStart += groupCount;
-
-	}
-    
+    groupStart += groupCount
+  }
 }
 
-ExtrudedCylinderBufferGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
-ExtrudedCylinderBufferGeometry.prototype.constructor = ExtrudedCylinderBufferGeometry;
+ExtrudedCylinderBufferGeometry.prototype = Object.create(
+  THREE.BufferGeometry.prototype
+)
+ExtrudedCylinderBufferGeometry.prototype.constructor = ExtrudedCylinderBufferGeometry
