@@ -247,4 +247,40 @@ const guis = {
       generate()
     }
   },
+  GeometryOptions: function(parameters, group, callback) {
+    let folder = gui.addFolder('Geometry Options')
+
+    let cylinderFolder = folder.addFolder('Cylinder Options')
+    cylinderFolder.add(parameters, 'radialSegments', 8, 320).step(1)
+    cylinderFolder.add(parameters, 'heightSegments', 8, 320).step(1)
+    cylinderFolder.add(parameters, 'cylinderRadius', 0.4, 2).step(0.01)
+    cylinderFolder.add(parameters, 'cylinderHeight', 1, 10).step(0.01)
+    cylinderFolder.add(parameters, 'cylinderExtrusion', -2, 3).step(0.01)
+    cylinderFolder.add(parameters, 'topConeRadius', 0, 1).step(0.01)
+    cylinderFolder.add(parameters, 'topConeHeight', 0, 1).step(0.01)
+
+    let gearFolder = folder.addFolder('Gear Options')
+    gearFolder.add(parameters, 'gear1Height', 0, 1).step(0.01)
+    gearFolder.add(parameters, 'gear1InnerRadius', 0.05, 1.9).step(0.01)
+    gearFolder.add(parameters, 'gear1OuterRadius', 0.1, 2).step(0.01)
+    gearFolder.add(parameters, 'gear1Teeth', 3, 128).step(1)
+
+    gearFolder.add(parameters, 'gear2Height', 0, 1).step(0.01)
+    gearFolder.add(parameters, 'gear2InnerRadius', 0.05, 1.9).step(0.01)
+    gearFolder.add(parameters, 'gear2OuterRadius', 0.1, 2).step(0.01)
+    gearFolder.add(parameters, 'gear2Teeth', 3, 128).step(1)
+
+    let axisFolder = folder.addFolder('Axis Options')
+    axisFolder.add(parameters, 'connectionHeight', 0, 2).step(0.01)
+    axisFolder.add(parameters, 'connectionRadius', 0.1, 1).step(0.01)
+    axisFolder.add(parameters, 'axisHeight', 0, 1).step(0.01)
+    axisFolder.add(parameters, 'axisRadius', 0.1, 1).step(0.01)
+
+    folder
+      .add(parameters, 'refresh', 0, 1)
+      .step(1)
+      .onChange(_ => {
+        callback(group)
+      })
+  },
 }

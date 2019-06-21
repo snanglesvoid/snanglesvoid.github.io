@@ -1,6 +1,257 @@
 document.addEventListener('DOMContentLoaded', function() {
+  let parameters = {
+    radialSegments: 280,
+    heightSegments: 170,
+
+    cylinderRadius: 1.15,
+    cylinderHeight: 4.1,
+    cylinderExtrusion: 0.1,
+
+    topConeRadius: 0.13,
+    topConeHeight: 0.15,
+
+    connectionHeight: 0.2,
+    connectionRadius: 0.6,
+
+    gear1Height: 0.1,
+    gear1InnerRadius: 1.05,
+    gear1OuterRadius: 1.2,
+    gear1Teeth: 80,
+
+    gear2Height: 0.24,
+    gear2InnerRadius: 0.45,
+    gear2OuterRadius: 0.27,
+    gear2Teeth: 18,
+
+    axisHeight: 0.15,
+    axisRadius: 0.1,
+
+    refresh: 0,
+  }
+
+  let bronze, iron, gold, copper, lineMaterial
+  let textureMaterial,
+    bronzeTextureMaterial,
+    ironTextureMaterial,
+    goldTextureMaterial
+  function initialiseMaterials() {
+    lineMaterial = new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.5,
+    })
+
+    bronze = new THREE.MeshPhongMaterial({
+      color: 0xcd7f32,
+      emissive: 0x673811,
+      side: THREE.DoubleSide,
+      flatShading: false,
+      shininess: 100,
+      reflectivity: 0.5,
+    })
+    iron = new THREE.MeshPhongMaterial({
+      color: 0x555555,
+      emissive: 0x333333,
+      side: THREE.DoubleSide,
+      flatShading: false,
+      shininess: 50,
+      reflectivity: 0.5,
+    })
+    gold = new THREE.MeshPhongMaterial({
+      color: 0xffd700,
+      emissive: 0x885300,
+      side: THREE.DoubleSide,
+      flatShading: false,
+      shininess: 100,
+      reflectivity: 0.5,
+    })
+    copper = new THREE.MeshPhongMaterial({
+      color: 0xb87333,
+      emissive: 0x643118,
+      side: THREE.DoubleSide,
+      flatShading: false,
+      shininess: 100,
+      reflectivity: 0.5,
+    })
+    const texture = new THREE.TextureLoader().load(
+      './assets/BirkKompostionAbstand.png'
+    )
+    texture.wrapS = THREE.RepeatWrapping
+    texture.wrapT = THREE.RepeatWrapping
+    // texture.repeat.set(400, 400)
+    textureMaterial = new THREE.MeshLambertMaterial({
+      transparent: false,
+      map: texture,
+      side: THREE.DoubleSide,
+    })
+    const bronzeTexture = new THREE.TextureLoader().load('./assets/copper3.jpg')
+    bronzeTexture.wrapS = THREE.RepeatWrapping
+    bronzeTexture.wrapT = THREE.RepeatWrapping
+    bronzeTexture.repeat.set(4, 4)
+    bronzeTextureMaterial = new THREE.MeshPhongMaterial({
+      transparent: false,
+      map: bronzeTexture,
+      shininess: 100,
+      reflectivity: 0.5,
+      side: THREE.DoubleSide,
+    })
+
+    const goldTexture = new THREE.TextureLoader().load('./assets/gold.jpg')
+    goldTexture.wrapS = THREE.RepeatWrapping
+    goldTexture.wrapT = THREE.RepeatWrapping
+    goldTexture.repeat.set(1, 1)
+    goldTextureMaterial = new THREE.MeshPhongMaterial({
+      transparent: false,
+      map: goldTexture,
+      shininess: 80,
+      reflectivity: 0.3,
+      side: THREE.DoubleSide,
+    })
+
+    const ironTexture = new THREE.TextureLoader().load('./assets/iron.jpg')
+    ironTexture.wrapS = THREE.RepeatWrapping
+    ironTexture.wrapT = THREE.RepeatWrapping
+    ironTexture.repeat.set(1, 1)
+    ironTextureMaterial = new THREE.MeshPhongMaterial({
+      transparent: false,
+      map: ironTexture,
+      shininess: 60,
+      reflectivity: 0.3,
+      side: THREE.DoubleSide,
+    })
+  }
+
+  function updateGeometries(group) {
+    group.children.forEach(x => {
+      x.geometry.dispose()
+      group.remove(x)
+    })
+
+    let geometry = new ExtrudedCylinderBufferGeometry(
+      parameters.cylinderRadius, //data.radiusTop,
+      parameters.cylinderRadius, //data.radiusBottom,
+      parameters.cylinderHeight, //data.height,
+      parameters.radialSegments, //data.radialSegments,
+      parameters.heightSegments, //data.heightSegments,
+      true, //data.openEnded,
+      0, //data.thetaStart,
+      2 * Math.PI, //data.thetaLength,
+      parameters.cylinderExtrusion,
+      imageBrightnessFunction()
+    )
+    geometry.translate(0.0, parameters.cylinderHeight / 2, 0.0)
+    geometry.computeVertexNormals()
+
+    let bottomDiskGeometry = new THREE.CircleBufferGeometry(
+      parameters.cylinderRadius, //radius
+      parameters.radialSegments //segments
+    )
+    bottomDiskGeometry.rotateX(Math.PI / 2)
+    bottomDiskGeometry.translate(0, 0, 0)
+
+    let topDiskGeometry = new THREE.RingBufferGeometry(
+      parameters.topConeRadius,
+      parameters.cylinderRadius,
+      parameters.radialSegments,
+      1
+    )
+    topDiskGeometry.rotateX(Math.PI / 2)
+    topDiskGeometry.translate(0, parameters.cylinderHeight, 0)
+
+    let topDiskCone = new THREE.ConeBufferGeometry(
+      parameters.topConeRadius, //radius : Float,
+      parameters.topConeHeight, //height : Float,
+      parameters.radialSegments, //radialSegments : Integer,
+      2, //heightSegments : Integer,
+      true, //openEnded : Boolean,
+      0, //thetaStart : Float,
+      2 * Math.PI //thetaLength : Float)
+    )
+    topDiskCone.rotateX(Math.PI)
+    topDiskCone.translate(
+      0,
+      parameters.cylinderHeight - parameters.topConeHeight / 2,
+      0
+    )
+
+    let connectionGeometry = new THREE.CylinderBufferGeometry(
+      parameters.connectionRadius,
+      parameters.connectionRadius,
+      parameters.connectionHeight,
+      32,
+      2,
+      false,
+      0,
+      2 * Math.PI
+    )
+    connectionGeometry.translate(0.0, -parameters.connectionHeight / 2, 0)
+
+    let gearGeometry1 = gearGeometry(
+      parameters.gear1OuterRadius,
+      parameters.gear1InnerRadius,
+      parameters.gear1Teeth,
+      {
+        steps: 1,
+        depth: parameters.gear1Height,
+        bevelEnabled: false,
+      }
+    )
+    gearGeometry1.rotateX(Math.PI / 2)
+    gearGeometry1.translate(0.0, -parameters.connectionHeight, 0.0)
+    let gear1 = new THREE.BufferGeometry().fromGeometry(gearGeometry1)
+
+    let gearGeometry2 = gearGeometry(
+      parameters.gear2OuterRadius,
+      parameters.gear2InnerRadius,
+      parameters.gear2Teeth,
+      {
+        steps: 1,
+        depth: parameters.gear2Height,
+        bevelEnabled: false,
+      }
+    )
+    gearGeometry2.rotateX(Math.PI / 2)
+    gearGeometry2.translate(
+      0.0,
+      -parameters.connectionHeight - parameters.gear1Height,
+      0.0
+    )
+    let gear2 = new THREE.BufferGeometry().fromGeometry(gearGeometry2)
+
+    let axisGeometry = new THREE.CylinderBufferGeometry(
+      parameters.axisRadius,
+      parameters.axisRadius,
+      parameters.axisHeight,
+      64,
+      2,
+      false,
+      0,
+      2 * Math.PI
+    )
+    axisGeometry.translate(0, -parameters.axisHeight / 2, 0)
+    axisGeometry.translate(
+      0,
+      -parameters.connectionHeight -
+        parameters.gear2Height -
+        parameters.gear1Height,
+      0
+    )
+
+    group.add(new THREE.Mesh(axisGeometry, ironTextureMaterial))
+    group.add(new THREE.Mesh(connectionGeometry, ironTextureMaterial))
+    group.add(new THREE.Mesh(gear1, goldTextureMaterial))
+    group.add(new THREE.Mesh(gear2, bronzeTextureMaterial))
+    group.add(new THREE.Mesh(geometry, bronze))
+    // group.add(new THREE.Mesh(mainCylinderGeometry, bronzeTextureMaterial))
+    group.add(new THREE.Mesh(topDiskGeometry, bronzeTextureMaterial))
+    group.add(new THREE.Mesh(bottomDiskGeometry, bronzeTextureMaterial))
+    group.add(new THREE.Mesh(topDiskCone, goldTextureMaterial))
+  }
+
   function initialise() {
     console.log('initialise')
+    initialiseMaterials()
+
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -28,223 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const group = new THREE.Group()
 
-    const bronze = new THREE.MeshPhongMaterial({
-      color: 0xcd7f32,
-      emissive: 0x673811,
-      side: THREE.DoubleSide,
-      flatShading: false,
-      shininess: 100,
-      reflectivity: 0.5,
-    })
-    const iron = new THREE.MeshPhongMaterial({
-      color: 0x555555,
-      emissive: 0x333333,
-      side: THREE.DoubleSide,
-      flatShading: false,
-      shininess: 50,
-      reflectivity: 0.5,
-    })
-    const gold = new THREE.MeshPhongMaterial({
-      color: 0xffd700,
-      emissive: 0x885300,
-      side: THREE.DoubleSide,
-      flatShading: false,
-      shininess: 100,
-      reflectivity: 0.5,
-    })
-    const copper = new THREE.MeshPhongMaterial({
-      color: 0xb87333,
-      emissive: 0x643118,
-      side: THREE.DoubleSide,
-      flatShading: false,
-      shininess: 100,
-      reflectivity: 0.5,
-    })
-
-    const texture = new THREE.TextureLoader().load(
-      './assets/BirkKompostionAbstand.png'
-    )
-    texture.wrapS = THREE.RepeatWrapping
-    texture.wrapT = THREE.RepeatWrapping
-    // texture.repeat.set(400, 400)
-    const textureMaterial = new THREE.MeshLambertMaterial({
-      transparent: false,
-      map: texture,
-      side: THREE.DoubleSide,
-    })
-    const bronzeTexture = new THREE.TextureLoader().load('./assets/copper3.jpg')
-    bronzeTexture.wrapS = THREE.RepeatWrapping
-    bronzeTexture.wrapT = THREE.RepeatWrapping
-    bronzeTexture.repeat.set(4, 4)
-    const bronzeTextureMaterial = new THREE.MeshPhongMaterial({
-      transparent: false,
-      map: bronzeTexture,
-      shininess: 100,
-      reflectivity: 0.5,
-      side: THREE.DoubleSide,
-    })
-
-    const goldTexture = new THREE.TextureLoader().load('./assets/gold.jpg')
-    goldTexture.wrapS = THREE.RepeatWrapping
-    goldTexture.wrapT = THREE.RepeatWrapping
-    goldTexture.repeat.set(1, 1)
-    const goldTextureMaterial = new THREE.MeshPhongMaterial({
-      transparent: false,
-      map: goldTexture,
-      shininess: 80,
-      reflectivity: 0.3,
-      side: THREE.DoubleSide,
-    })
-
-    const ironTexture = new THREE.TextureLoader().load('./assets/iron.jpg')
-    ironTexture.wrapS = THREE.RepeatWrapping
-    ironTexture.wrapT = THREE.RepeatWrapping
-    ironTexture.repeat.set(1, 1)
-    const ironTextureMaterial = new THREE.MeshPhongMaterial({
-      transparent: false,
-      map: ironTexture,
-      shininess: 60,
-      reflectivity: 0.3,
-      side: THREE.DoubleSide,
-    })
-
-    const radialSegments = 280
-    const cylinderRadius = 1.15
-    const topConeRadius = 0.13
-
-    // const bufferGeo = new THREE.BufferGeometry()
-    // bufferGeo.addAttribute('position', new THREE.Float32BufferAttribute([], 3))
-
-    let geometry = new ExtrudedCylinderBufferGeometry(
-      cylinderRadius, //data.radiusTop,
-      cylinderRadius, //data.radiusBottom,
-      4.1, //data.height,
-      radialSegments, //data.radialSegments,
-      170, //data.heightSegments,
-      true, //data.openEnded,
-      0, //data.thetaStart,
-      2 * Math.PI, //data.thetaLength,
-      -0.15,
-      imageBrightnessFunction()
-    )
-    geometry.translate(0.0, 2.15, 0.0)
-
-    geometry.computeVertexNormals()
-
-    let mainCylinderGeometry = new THREE.CylinderGeometry(
-      cylinderRadius,
-      cylinderRadius,
-      4.1,
-      radialSegments,
-      170,
-      true,
-      0,
-      2 * Math.PI
-    )
-    mainCylinderGeometry.translate(0, 2.15, 0)
-
-    let bottomDiskGeometry = new THREE.CircleBufferGeometry(
-      cylinderRadius, //radius
-      radialSegments //segments
-    )
-    bottomDiskGeometry.rotateX(Math.PI / 2)
-    bottomDiskGeometry.translate(0, 0.1, 0)
-    let topDiskGeometry = new THREE.RingBufferGeometry(
-      topConeRadius,
-      cylinderRadius,
-      radialSegments,
-      1
-    )
-    topDiskGeometry.rotateX(Math.PI / 2)
-    topDiskGeometry.translate(0, 4.2, 0)
-    let topDiskCone = new THREE.ConeBufferGeometry(
-      topConeRadius, //radius : Float,
-      0.15, //height : Float,
-      radialSegments, //radialSegments : Integer,
-      2, //heightSegments : Integer,
-      true, //openEnded : Boolean,
-      0, //thetaStart : Float,
-      2 * Math.PI //thetaLength : Float)
-    )
-    topDiskCone.rotateX(Math.PI)
-    topDiskCone.translate(0, 4.125, 0)
-
-    const lineMaterial = new THREE.LineBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.5,
-    })
-
-    let axisGeometry = new THREE.CylinderBufferGeometry(
-      0.1,
-      0.1,
-      0.05,
-      64,
-      2,
-      false,
-      0,
-      2 * Math.PI
-    )
-    axisGeometry.translate(0, -0.025, 0)
-    axisGeometry.translate(0, -0.28, 0)
-
-    let connectionGeometry = new THREE.CylinderBufferGeometry(
-      1,
-      1,
-      0.1,
-      32,
-      2,
-      false,
-      0,
-      2 * Math.PI
-    )
-    connectionGeometry.translate(0.0, 0.05, 0)
-
-    // const meshMaterial = new THREE.MeshPhongMaterial({
-    //   color: 0x444444,
-    //   emissive: 0x111111,
-    //   side: THREE.DoubleSide,
-    //   flatShading: false,
-    // })
-    let gearGeometry1 = gearGeometry(1.15, 1.05, 96)
-    gearGeometry1.rotateX(Math.PI / 2)
-    let gearGeometry2 = gearGeometry(0.45, 0.27, 18, {
-      steps: 1,
-      depth: 0.18,
-      bevelEnabled: false,
-    })
-    gearGeometry2.translate(0, 0, 0.1)
-    gearGeometry2.rotateX(Math.PI / 2)
-
-    let gear1 = new THREE.BufferGeometry().fromGeometry(gearGeometry1)
-    // group.add(
-    //   new THREE.LineSegments(new THREE.WireframeGeometry(gear1), lineMaterial)
-    // )
-
-    let gear2 = new THREE.BufferGeometry().fromGeometry(gearGeometry2)
-    // group.add(
-    //   new THREE.LineSegments(new THREE.WireframeGeometry(gear2), lineMaterial)
-    // )
-
-    // group.add(new THREE.Mesh(axisGeometry, ironTextureMaterial))
-    // group.add(new THREE.Mesh(connectionGeometry, ironTextureMaterial))
-    // group.add(new THREE.Mesh(gear1, goldTextureMaterial))
-    // group.add(new THREE.Mesh(gear2, bronzeTextureMaterial))
-    group.add(new THREE.Mesh(geometry, bronze))
-    // group.add(new THREE.Mesh(mainCylinderGeometry, bronzeTextureMaterial))
-    // group.add(new THREE.Mesh(topDiskGeometry, bronzeTextureMaterial))
-    // group.add(new THREE.Mesh(bottomDiskGeometry, bronzeTextureMaterial))
-    // group.add(new THREE.Mesh(topDiskCone, goldTextureMaterial))
-
-    // group.add(new THREE.LineSegments(gear2, lineMaterial))
-    // group.add(
-    //   new THREE.LineSegments(
-    //     new THREE.WireframeGeometry(geometry),
-    //     lineMaterial
-    //   )
-    // )
-
-    // updateGroupGeometry(group, geometry)
+    // updateGeometries(group)
 
     let rotationX = 0.0
     let rotationY = 0.0
@@ -255,6 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
       rotationY = -data.dy
     })
     guis.LightsOptions(lights)
+    guis.GeometryOptions(parameters, group, updateGeometries)
 
     scene.add(group)
 
