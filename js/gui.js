@@ -253,7 +253,7 @@ const guis = {
     let cylinderFolder = folder.addFolder('Cylinder Options')
     cylinderFolder.add(parameters, 'radialSegments', 8, 320).step(1)
     cylinderFolder.add(parameters, 'heightSegments', 8, 320).step(1)
-    cylinderFolder.add(parameters, 'cylinderRadius', 4, 20).step(0.01)
+    cylinderFolder.add(parameters, 'cylinderRadius', 4, 50).step(0.01)
     cylinderFolder.add(parameters, 'cylinderHeight', 10, 100).step(0.01)
     cylinderFolder.add(parameters, 'cylinderExtrusion', -20, 30).step(0.01)
     cylinderFolder.add(parameters, 'topConeRadius', 0, 10).step(0.01)

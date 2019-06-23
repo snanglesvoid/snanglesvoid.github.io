@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cylinderRadius: 11.5,
     cylinderHeight: 41,
     cylinderExtrusion: 1,
-    cylinderOpenEnded: true,
+    cylinderOpenEnded: false,
 
     topConeRadius: 1.3,
     topConeHeight: 1.5,
