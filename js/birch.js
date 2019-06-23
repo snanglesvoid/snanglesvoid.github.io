@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
     refresh: 0,
   }
 
+  window.parameters = parameters
+
   let bronze, iron, gold, copper, lineMaterial
   let textureMaterial,
     bronzeTextureMaterial,
