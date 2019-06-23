@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cylinderRadius: 11.5,
     cylinderHeight: 41,
     cylinderExtrusion: 1,
-    cylinderOpenEnded: false,
+    cylinderOpenEnded: true,
 
     topConeRadius: 1.3,
     topConeHeight: 1.5,
@@ -240,14 +240,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let singleGeometry = new THREE.Geometry()
     let args = [
-      // axisGeometry,
-      // connectionGeometry,
-      // gear1,
-      // gear2,
+      axisGeometry,
+      connectionGeometry,
+      gear1,
+      gear2,
       geometry,
-      // topDiskGeometry,
-      // bottomDiskGeometry,
-      // topDiskCone,
+      topDiskGeometry,
+      bottomDiskGeometry,
+      topDiskCone,
     ].map(x => {
       // if (x instanceof THREE.Geometry) return x
       return new THREE.Geometry().fromBufferGeometry(x)
