@@ -3,28 +3,28 @@ document.addEventListener('DOMContentLoaded', function() {
     radialSegments: 280,
     heightSegments: 170,
 
-    cylinderRadius: 1.15,
-    cylinderHeight: 4.1,
-    cylinderExtrusion: 0.1,
+    cylinderRadius: 11.5,
+    cylinderHeight: 41,
+    cylinderExtrusion: 1,
 
-    topConeRadius: 0.13,
-    topConeHeight: 0.15,
+    topConeRadius: 1.3,
+    topConeHeight: 1.5,
 
-    connectionHeight: 0.2,
-    connectionRadius: 0.6,
+    connectionHeight: 1.5,
+    connectionRadius: 6,
 
-    gear1Height: 0.1,
-    gear1InnerRadius: 1.05,
-    gear1OuterRadius: 1.2,
+    gear1Height: 1.2,
+    gear1InnerRadius: 10.8,
+    gear1OuterRadius: 11.7,
     gear1Teeth: 80,
 
-    gear2Height: 0.24,
-    gear2InnerRadius: 0.45,
-    gear2OuterRadius: 0.27,
+    gear2Height: 2.3,
+    gear2InnerRadius: 3,
+    gear2OuterRadius: 4.6,
     gear2Teeth: 18,
 
-    axisHeight: 0.15,
-    axisRadius: 0.1,
+    axisHeight: 1.1,
+    axisRadius: 1.1,
 
     refresh: 0,
   }
@@ -237,15 +237,33 @@ document.addEventListener('DOMContentLoaded', function() {
       0
     )
 
-    group.add(new THREE.Mesh(axisGeometry, ironTextureMaterial))
-    group.add(new THREE.Mesh(connectionGeometry, ironTextureMaterial))
-    group.add(new THREE.Mesh(gear1, goldTextureMaterial))
-    group.add(new THREE.Mesh(gear2, bronzeTextureMaterial))
-    group.add(new THREE.Mesh(geometry, bronze))
+    let singleGeometry = new THREE.Geometry()
+    let args = [
+      axisGeometry,
+      connectionGeometry,
+      gear1,
+      gear2,
+      geometry,
+      topDiskGeometry,
+      bottomDiskGeometry,
+      topDiskCone,
+    ].map(x => {
+      // if (x instanceof THREE.Geometry) return x
+      return new THREE.Geometry().fromBufferGeometry(x)
+    })
+    args.forEach(a => {
+      singleGeometry.merge(a)
+    })
+    group.add(new THREE.Mesh(singleGeometry, iron))
+    // group.add(new THREE.Mesh(axisGeometry, ironTextureMaterial))
+    // group.add(new THREE.Mesh(connectionGeometry, ironTextureMaterial))
+    // group.add(new THREE.Mesh(gear1, goldTextureMaterial))
+    // group.add(new THREE.Mesh(gear2, bronzeTextureMaterial))
+    // group.add(new THREE.Mesh(geometry, bronze))
     // group.add(new THREE.Mesh(mainCylinderGeometry, bronzeTextureMaterial))
-    group.add(new THREE.Mesh(topDiskGeometry, bronzeTextureMaterial))
-    group.add(new THREE.Mesh(bottomDiskGeometry, bronzeTextureMaterial))
-    group.add(new THREE.Mesh(topDiskCone, goldTextureMaterial))
+    // group.add(new THREE.Mesh(topDiskGeometry, bronzeTextureMaterial))
+    // group.add(new THREE.Mesh(bottomDiskGeometry, bronzeTextureMaterial))
+    // group.add(new THREE.Mesh(topDiskCone, goldTextureMaterial))
   }
 
   function initialise() {
