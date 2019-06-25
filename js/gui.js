@@ -274,7 +274,8 @@ const guis = {
     axisFolder.add(parameters, 'connectionHeight', 0, 20).step(0.01)
     axisFolder.add(parameters, 'connectionRadius', 1, 10).step(0.01)
     axisFolder.add(parameters, 'axisHeight', 0, 10).step(0.01)
-    axisFolder.add(parameters, 'axisRadius', 1, 10).step(0.01)
+    axisFolder.add(parameters, 'axisRadiusTop', 1, 10).step(0.01)
+    axisFolder.add(parameters, 'axisRadiusBottom', 1, 10).step(0.01)
 
     folder
       .add(parameters, 'refresh', 0, 1)

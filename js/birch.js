@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     radialSegments: 280,
     heightSegments: 170,
 
+    cylinderOn: true,
     cylinderRadius: 11.5,
     cylinderHeight: 41,
     cylinderExtrusion: 1,
@@ -11,21 +12,26 @@ document.addEventListener('DOMContentLoaded', function() {
     topConeRadius: 1.3,
     topConeHeight: 1.5,
 
+    connectionOn: true,
     connectionHeight: 1.5,
     connectionRadius: 6,
 
+    gear1On: true,
     gear1Height: 1.2,
     gear1InnerRadius: 10.8,
     gear1OuterRadius: 11.7,
     gear1Teeth: 80,
 
+    gear2On: true,
     gear2Height: 2.3,
     gear2InnerRadius: 3,
     gear2OuterRadius: 4.6,
     gear2Teeth: 18,
 
+    axisOn: true,
     axisHeight: 1.1,
-    axisRadius: 1.1,
+    axisRadiusTop: 1.1,
+    axisRadiusBottom: 1.1,
 
     refresh: 0,
   }
@@ -222,8 +228,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let gear2 = new THREE.BufferGeometry().fromGeometry(gearGeometry2)
 
     let axisGeometry = new THREE.CylinderBufferGeometry(
-      parameters.axisRadius,
-      parameters.axisRadius,
+      parameters.axisRadiusTop,
+      parameters.axisRadiusBottom,
       parameters.axisHeight,
       64,
       2,
@@ -257,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
     args.forEach(a => {
       singleGeometry.merge(a)
     })
-    group.add(new THREE.Mesh(singleGeometry, iron))
+    group.add(new THREE.Mesh(singleGeometry, ironTextureMaterial))
     // group.add(new THREE.Mesh(axisGeometry, ironTextureMaterial))
     // group.add(new THREE.Mesh(connectionGeometry, ironTextureMaterial))
     // group.add(new THREE.Mesh(gear1, goldTextureMaterial))
@@ -335,6 +341,18 @@ document.addEventListener('DOMContentLoaded', function() {
     )
 
     render()
+
+    document
+      .getElementById('savebtn')
+      .addEventListener('click', function(event) {
+        let str = JSON.stringify(parameters)
+        let blob = new Blob([str], { type: 'text/plain' })
+        saveAs(blob, 'birke-settings.json')
+      })
+
+    window.setParameters = function(json) {
+      Object.assign(parameters, JSON.parse(json))
+    }
 
     document
       .getElementById('exportbtn')
